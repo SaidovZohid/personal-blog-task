@@ -1,0 +1,130 @@
+basePath: /v1
+definitions:
+  models.Error:
+    properties:
+      code:
+        type: integer
+      error:
+        type: string
+      message:
+        type: string
+    type: object
+  models.ResponseSuccess:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  models.SignUpReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - password
+    - role
+    type: object
+  models.UserInfo:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+  models.UserLoginAndValidateReq:
+    properties:
+      accecc_token:
+        type: string
+      info:
+        $ref: '#/definitions/models.UserInfo'
+    type: object
+  models.VerifyEmailRequest:
+    properties:
+      code:
+        type: string
+      email:
+        type: string
+    required:
+    - code
+    - email
+    type: object
+info:
+  contact: {}
+  description: This is personal blog api
+  title: Swagger for personal blog api
+  version: "1.0"
+paths:
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: user type = {blogger, reader}
+      operationId: SignUp
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.SignUpReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Sign up for blogger and reader
+      tags:
+      - register
+  /auth/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verification Email with Code After successfull request from SignUp
+      operationId: VerifyEmail
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyEmailRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserLoginAndValidateReq'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: verifyEmail
+      tags:
+      - register
+swagger: "2.0"
