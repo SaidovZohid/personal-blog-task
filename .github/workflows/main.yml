@@ -1,0 +1,33 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  build_and_push:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and Push Docker Image
+        run: make push
+
+      - name: Install SSH Client
+        run: sudo apt-get install -y openssh-client
+
+      - name: Deploy Application
+        run: |
+          chmod 400 $SSH_KEY
+          ssh -o StrictHostKeyChecking=no -i $SSH_KEY $USERNAME@$IP "
+            sudo docker login -u $REGISTRY_USER -p $REGISTRY_PASS &&
+            sudo docker pull zohiddev/blog-project-task-backend:latest &&
+            cd task-blog &&
+            make up"

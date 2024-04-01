@@ -11,22 +11,23 @@ CREATE TABLE IF NOT EXISTS "posts" (
     "id" SERIAL PRIMARY KEY,
     "header" VARCHAR NOT NULL,
     "content" TEXT NOT NULL,
-    "user_id" INTEGER NOT NULL REFERENCES users(id),
+    "user_id" INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS "comments" (
     "id" SERIAL PRIMARY KEY,
     "content" TEXT NOT NULL,
-    "post_id" INTEGER NOT NULL REFERENCES posts(id),
-    "user_id" INTEGER NOT NULL REFERENCES users(id),
+    "post_id" INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    "user_id" INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS "replies" (
     "id" SERIAL PRIMARY KEY,
     "content" TEXT NOT NULL,
-    "comment_id" INTEGER NOT NULL REFERENCES comments(id),
-    "user_id" INTEGER NOT NULL REFERENCES users(id),
+    "comment_id" INTEGER NOT NULL REFERENCES comments(id) ON DELETE CASCADE,
+    "post_id" INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+    "user_id" INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

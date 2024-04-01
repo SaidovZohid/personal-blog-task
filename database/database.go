@@ -31,6 +31,5 @@ func MigrateDB(dbURL string) error {
 	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("cannot migrate database:%w", err)
 	}
-
 	return nil
 }

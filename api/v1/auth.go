@@ -210,6 +210,7 @@ func (h *handlerV1) VerifyEmail(ctx *gin.Context) {
 		Role:     user.Role,
 	})
 	if err != nil {
+		h.logger.Error("unable to create user data", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, models.Error{
 			Code:    500,
 			Error:   err.Error(),
@@ -220,6 +221,9 @@ func (h *handlerV1) VerifyEmail(ctx *gin.Context) {
 
 	accessToken, _, err := utils.CreateToken(h.cfg, &utils.TokenParams{
 		Email:    req.Email,
+		Role:     user.Role,
+		Name:     splittedName[0],
+		UserId:   userInfo.Id,
 		Duration: h.cfg.Jwt.AccessTokenDuration,
 	})
 	if err != nil {
@@ -240,5 +244,89 @@ func (h *handlerV1) VerifyEmail(ctx *gin.Context) {
 			CreatedAt: userInfo.CreatedAt.Format(time.RFC3339),
 		},
 		AcceccToken: accessToken,
+	})
+}
+
+// @ID Login
+// @Router /auth/login [post]
+// @Summary Login by email and password
+// @Description Reader or Blogger login
+// @Tags register
+// @Accept json
+// @Produce json
+// @Param data body models.LoginReq true "Data"
+// @Success 200 {object} models.UserLoginAndValidateReq
+// @Failure 500 {object} models.Error
+// @Failure 400 {object} models.Error
+func (h *handlerV1) Login(ctx *gin.Context) {
+	var req models.LoginReq
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.Error{
+			Code:    400,
+			Error:   err.Error(),
+			Message: "Please, fill all required fields!",
+		})
+		return
+	}
+
+	takenUser, err := h.storage.User().GetByEmail(ctx, req.Email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusBadRequest, models.Error{
+				Code:    404,
+				Error:   "user with email this email does not exist",
+				Message: "Please, register using this email :)",
+			})
+			return
+		}
+		h.logger.Error("unable to get user data", zap.Error(err))
+		ctx.JSON(http.StatusBadRequest, models.Error{
+			Code:    500,
+			Error:   "internal server error",
+			Message: "Please, try again later :(",
+		})
+		return
+	}
+
+	if err = utils.CheckPassword(req.Password, takenUser.Password); err != nil {
+		ctx.JSON(http.StatusBadRequest, models.Error{
+			Code:    400,
+			Error:   "password not valid",
+			Message: "Please, it seems you forgot your passowrd :(",
+		})
+		return
+	}
+
+	duration := h.cfg.Jwt.AccessTokenDuration
+	if req.RememberMe {
+		duration = h.cfg.Jwt.RememberMeAccessTokenSecretKey
+	}
+
+	accessToken, _, err := utils.CreateToken(h.cfg, &utils.TokenParams{
+		Email:    req.Email,
+		Role:     takenUser.Role,
+		Duration: duration,
+		UserId:   takenUser.Id,
+		Name:     takenUser.Name,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, models.Error{
+			Code:    500,
+			Error:   err.Error(),
+			Message: "Something went wrong to create token, try again in login!",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.UserLoginAndValidateReq{
+		Info: models.UserInfo{
+			Id:        takenUser.Id,
+			Name:      takenUser.Name,
+			Email:     takenUser.Email,
+			Role:      takenUser.Role,
+			CreatedAt: takenUser.CreatedAt.Format(time.RFC3339),
+		},
+		AcceccToken: accessToken,
+		RememberMe:  req.RememberMe,
 	})
 }

@@ -25,21 +25,18 @@ func main() {
 		logger.Panic("cannot load config", zap.Error(err))
 	}
 
-	// try to connect and migrate DB using golang-migrate.
 	pgURL := cfg.PgURL()
 	if err = database.MigrateDB(pgURL); err != nil {
 		logger.Error("cannot migrate db", zap.Error(err))
 		os.Exit(1)
 	}
 
-	// this returns connection pool
 	dbPool, err := sqlx.Connect("postgres", pgURL)
 	if err != nil {
 		logger.Error("Unable to connect to database ", zap.Error(err))
 		os.Exit(1)
 	}
 	defer dbPool.Close()
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr: cfg.RedisAddr,
 	})

@@ -23,6 +23,10 @@ type RouterOptions struct {
 // @version         1.0
 // @description     This is personal blog api
 // @BasePath  /v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
+// @description Insert jwt access token
 func New(opt *RouterOptions) *gin.Engine {
 	router := gin.Default()
 
@@ -39,12 +43,32 @@ func New(opt *RouterOptions) *gin.Engine {
 		Logger:   opt.Logger,
 	})
 
-	_ = handlerV1
-
 	apiV1 := router.Group("/v1")
 	{
+		// auth
 		apiV1.POST("/auth/signup", handlerV1.SignUp)
 		apiV1.POST("/auth/verify", handlerV1.VerifyEmail)
+		apiV1.POST("/auth/login", handlerV1.Login)
+		{
+			// post
+			apiV1.POST("/posts", handlerV1.AuthMiddleWare, handlerV1.CreatePost)
+			apiV1.GET("/posts/:id", handlerV1.GetPost)
+			apiV1.PUT("/posts/:id", handlerV1.AuthMiddleWare, handlerV1.UpdatePost)
+			apiV1.DELETE("/posts/:id", handlerV1.AuthMiddleWare, handlerV1.DeletePost)
+			apiV1.GET("/posts", handlerV1.GetAllPosts)
+
+			// comment
+			apiV1.POST("/comments", handlerV1.AuthMiddleWare, handlerV1.CreateComment)
+			apiV1.PUT("/comments/:id", handlerV1.AuthMiddleWare, handlerV1.UpdateComment)
+			apiV1.DELETE("/comments/:id", handlerV1.AuthMiddleWare, handlerV1.DeleteComment)
+			apiV1.GET("/comments", handlerV1.GetAllComments)
+
+			// reply
+			apiV1.POST("/replies", handlerV1.AuthMiddleWare, handlerV1.CreateReply)
+			apiV1.PUT("/replies/:id", handlerV1.AuthMiddleWare, handlerV1.UpdateReply)
+			apiV1.DELETE("/replies/:id", handlerV1.AuthMiddleWare, handlerV1.DeleteReply)
+			apiV1.GET("/replies", handlerV1.GetAllReplies)
+		}
 	}
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

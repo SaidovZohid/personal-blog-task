@@ -10,7 +10,10 @@ import (
 
 type TokenParams struct {
 	Email    string
+	UserId   int64
+	Name     string
 	Duration time.Duration
+	Role     string
 }
 
 func CreateToken(cfg *config.Config, tokenParams *TokenParams) (string, *Payload, error) {
@@ -34,7 +37,6 @@ func VerifyToken(cfg *config.Config, token string) (*Payload, error) {
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &Payload{}, keyFunc)
-
 	if err != nil {
 		verr, ok := err.(*jwt.ValidationError)
 		if ok && errors.Is(verr.Inner, ErrExpiredToken) {

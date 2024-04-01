@@ -1,5 +1,60 @@
 basePath: /v1
 definitions:
+  models.Comment:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      user_id:
+        type: integer
+      user_info:
+        $ref: '#/definitions/models.UserData'
+    type: object
+  models.CommentWithReplies:
+    properties:
+      all_replies:
+        $ref: '#/definitions/models.GetAllRepliesResponse'
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      user_id:
+        type: integer
+      user_info:
+        $ref: '#/definitions/models.UserData'
+    type: object
+  models.CreateCommentRequest:
+    properties:
+      content:
+        type: string
+      post_id:
+        type: integer
+    type: object
+  models.CreatePostRequest:
+    properties:
+      body:
+        type: string
+      header:
+        type: string
+    type: object
+  models.CreateReplyRequest:
+    properties:
+      comment_id:
+        type: integer
+      content:
+        type: string
+      post_id:
+        type: integer
+    type: object
   models.Error:
     properties:
       code:
@@ -8,6 +63,104 @@ definitions:
         type: string
       message:
         type: string
+    type: object
+  models.GetAllCommentsResponse:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/models.Comment'
+        type: array
+      count:
+        type: integer
+    type: object
+  models.GetAllPostsResponse:
+    properties:
+      count:
+        type: integer
+      posts:
+        items:
+          $ref: '#/definitions/models.Post'
+        type: array
+    type: object
+  models.GetAllRepliesResponse:
+    properties:
+      count:
+        type: integer
+      replies:
+        items:
+          $ref: '#/definitions/models.Reply'
+        type: array
+    type: object
+  models.GetPostInfo:
+    properties:
+      all_comments:
+        $ref: '#/definitions/models.PostComments'
+      body:
+        type: string
+      created_at:
+        type: string
+      header:
+        type: string
+      id:
+        type: integer
+      user_id:
+        type: integer
+      user_info:
+        $ref: '#/definitions/models.UserData'
+    type: object
+  models.LoginReq:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      remember_me:
+        default: false
+        type: boolean
+    required:
+    - email
+    - password
+    type: object
+  models.Post:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      header:
+        type: string
+      id:
+        type: integer
+      user_id:
+        type: integer
+      user_info:
+        $ref: '#/definitions/models.UserData'
+    type: object
+  models.PostComments:
+    properties:
+      comments:
+        items:
+          $ref: '#/definitions/models.CommentWithReplies'
+        type: array
+      count:
+        type: integer
+    type: object
+  models.Reply:
+    properties:
+      comment_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      post_id:
+        type: integer
+      user_id:
+        type: integer
+      user_info:
+        $ref: '#/definitions/models.UserData'
     type: object
   models.ResponseSuccess:
     properties:
@@ -29,6 +182,30 @@ definitions:
     - password
     - role
     type: object
+  models.UpdateComment:
+    properties:
+      content:
+        type: string
+    type: object
+  models.UpdatePostRequest:
+    properties:
+      body:
+        type: string
+      header:
+        type: string
+    type: object
+  models.UpdateReply:
+    properties:
+      content:
+        type: string
+    type: object
+  models.UserData:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   models.UserInfo:
     properties:
       created_at:
@@ -44,10 +221,12 @@ definitions:
     type: object
   models.UserLoginAndValidateReq:
     properties:
-      accecc_token:
+      access_token:
         type: string
       info:
         $ref: '#/definitions/models.UserInfo'
+      remember_me:
+        type: boolean
     type: object
   models.VerifyEmailRequest:
     properties:
@@ -65,6 +244,37 @@ info:
   title: Swagger for personal blog api
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Reader or Blogger login
+      operationId: Login
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserLoginAndValidateReq'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Login by email and password
+      tags:
+      - register
   /auth/signup:
     post:
       consumes:
@@ -127,4 +337,403 @@ paths:
       summary: verifyEmail
       tags:
       - register
+  /comments:
+    get:
+      consumes:
+      - application/json
+      description: Get comments
+      parameters:
+      - in: query
+        name: post_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllCommentsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get comments
+      tags:
+      - comment
+    post:
+      consumes:
+      - application/json
+      description: Create a comment
+      parameters:
+      - description: Comment
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Comment'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a comment
+      tags:
+      - comment
+  /comments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a comment
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a comment
+      tags:
+      - comment
+    put:
+      consumes:
+      - application/json
+      description: Update comment with it's id as param
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Comment
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateComment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Update comment with it's id as param
+      tags:
+      - comment
+  /posts:
+    get:
+      consumes:
+      - application/json
+      description: Get posts by giving limit, page and sorting asc or desc.
+      parameters:
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - default: desc
+        enum:
+        - desc
+        - asc
+        in: query
+        name: sort
+        type: string
+      - in: query
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllPostsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get posts by giving limit, page and sorting asc or desc.
+      tags:
+      - post
+    post:
+      consumes:
+      - application/json
+      description: Create a post
+      parameters:
+      - description: Post
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a post
+      tags:
+      - post
+  /posts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Create a post
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a post
+      tags:
+      - post
+    get:
+      consumes:
+      - application/json
+      description: Create a post with it's id
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.GetPostInfo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get a post with it's id
+      tags:
+      - post
+    put:
+      consumes:
+      - application/json
+      description: Update post with it's id and user_id as param
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Post
+        in: body
+        name: post
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdatePostRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Post'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.Error'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Update post with it's id as param
+      tags:
+      - post
+  /replies:
+    get:
+      consumes:
+      - application/json
+      description: Get replies
+      parameters:
+      - in: query
+        name: comment_id
+        required: true
+        type: integer
+      - in: query
+        name: post_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllRepliesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      summary: Get replies
+      tags:
+      - reply
+    post:
+      consumes:
+      - application/json
+      description: Create a reply to comment
+      parameters:
+      - description: Reply
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateReplyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Reply'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a reply
+      tags:
+      - reply
+  /replies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a reply
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a reply
+      tags:
+      - reply
+    put:
+      consumes:
+      - application/json
+      description: Update reply with it's id as param
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Reply
+        in: body
+        name: reply
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateReply'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Update reply with it's id as param
+      tags:
+      - reply
+securityDefinitions:
+  ApiKeyAuth:
+    description: Insert jwt access token
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
