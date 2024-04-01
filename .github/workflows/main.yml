@@ -19,7 +19,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker login -u zohiddev -p zohid2004 && make push
+          docker login -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASS }} && make push
 
       - name: Install SSH Client
         run: sudo apt-get install -y openssh-client
@@ -27,7 +27,7 @@ jobs:
       - name: Deploy Application
         run: |
           chmod 400 ${{ secrets.SSH_KEY }}
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} $${{ secrets.USERNAME }}@$${{ secrets.IP }} "
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ${{ secrets.USERNAME }}@$${{ secrets.IP }} "
             sudo docker login -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASS }} &&
             sudo docker pull zohiddev/blog-project-task-backend:latest &&
             cd task-blog &&
