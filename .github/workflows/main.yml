@@ -26,8 +26,9 @@ jobs:
 
       - name: Deploy Application
         run: |
-          chmod 400 ${{ secrets.SSH_KEY }}
-          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ${{ secrets.USERNAME }}@$${{ secrets.IP }} "
+          echo "$SSH_KEY" > ssh_key.pem
+          chmod 400 ssh_key.pem
+          ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ${{ secrets.USERNAME }}@${{ secrets.IP }} "
             sudo docker login -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASS }} &&
             sudo docker pull zohiddev/blog-project-task-backend:latest &&
             cd task-blog &&
