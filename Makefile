@@ -10,14 +10,10 @@ export
 help: ## shows this help
 	@cat $(MAKEFILE_LIST) | grep -E '^[a-zA-Z_-]+:.*?## .*$$' | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-format: ## strict formatting with gofumpt
-	@echo Adjust formatting...
-	@find . -name '*.go' -type f -exec gofumpt -w {} \;
-
 swag-init: ## init swagger
 	swag init -g api/server.go -o api/docs
 
-lint: format ## Lint project
+lint: ## Lint project
 	golangci-lint run ./...
 
 test-coverage: ## check coverage in default browser
@@ -40,8 +36,18 @@ migration-add: ## migration-add name=$1: create a new database migration
 	@echo 'Creating migration files for ${name}...'
 	migrate create -seq -ext=.sql -dir=./database/migrations ${name}
 
-dev-compose-up: ## run docker compose
-	PWD=$(PROJECT_ROOT) docker compose -f deploy/docker/docker-compose.yaml up -d
+run-project: dev-backend-compose-up ## run the backend and frontend
+	${echo "Building And Docker compose up Frontend Application"}
+	cd ${PROJECT_ROOT}/blog-frontend && npm run dev && cd ..
 
-dev-compose-down: ## remove composed set
-	PWD=$(PROJECT_ROOT) docker compose -f deploy/docker/docker-compose.yaml down
+dev-backend-compose-up:  ## run docker compose backend
+	docker compose up -d
+
+dev-backend-compose-up:
+	docker compose down
+
+image-build:
+	docker build --platform linux/amd64 --tag zohiddev/blog-project-task-backend:latest .
+
+push:
+	docker image push zohiddev/blog-project-task-backend:latest

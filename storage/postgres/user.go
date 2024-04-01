@@ -45,10 +45,8 @@ func (u userRepo) Create(ctx context.Context, user *repo.User) (*repo.User, erro
 	return user, nil
 }
 
-func (u userRepo) Get(ctx context.Context, userId int) (*repo.User, error) {
-	var (
-		user repo.User
-	)
+func (u userRepo) Get(ctx context.Context, userId int64) (*repo.User, error) {
+	var user repo.User
 	query := `
 		SELECT
 			id,
@@ -78,9 +76,7 @@ func (u userRepo) Get(ctx context.Context, userId int) (*repo.User, error) {
 }
 
 func (u userRepo) GetByEmail(ctx context.Context, email string) (*repo.User, error) {
-	var (
-		user repo.User
-	)
+	var user repo.User
 	query := `
 		SELECT
 			id,
@@ -110,9 +106,7 @@ func (u userRepo) GetByEmail(ctx context.Context, email string) (*repo.User, err
 }
 
 func (u userRepo) Update(ctx context.Context, user *repo.UpdateUser) (*repo.User, error) {
-	var (
-		res repo.User
-	)
+	var res repo.User
 	query := `
 		UPDATE users SET 
 			name = $1

@@ -33,12 +33,17 @@ type Config struct {
 		MaxIdleTime  string
 	}
 	Jwt struct {
-		AccessTokenSecretKey string
-		AccessTokenDuration  time.Duration
+		AccessTokenSecretKey           string
+		RememberMeAccessTokenSecretKey time.Duration
+		AccessTokenDuration            time.Duration
 	}
 	Smtp struct {
 		Sender   string
 		Password string
+	}
+	Authorization struct {
+		HeaderKey  string
+		PayloadKey string
 	}
 	RestAddr            string
 	RedisAddr           string
@@ -70,6 +75,8 @@ func (cfg *Config) Load(path string) error {
 	cfg.Postgres.Password = os.Getenv("PG_PASSWORD")
 	cfg.Postgres.Database = os.Getenv("PG_DATABASE")
 	cfg.Jwt.AccessTokenSecretKey = os.Getenv("JWT_ACCESS_TOKEN_SECRET_KEY")
+	cfg.Authorization.HeaderKey = os.Getenv("AUTHORIZATION_HEADER_KEY")
+	cfg.Authorization.PayloadKey = os.Getenv("AUTHORIZATION_PAYLOAD_KEY")
 	cfg.Smtp.Sender = os.Getenv("SMTP_SENDER")
 	cfg.Smtp.Password = os.Getenv("SMTP_PASSWORD")
 
@@ -99,6 +106,10 @@ func (cfg *Config) Load(path string) error {
 		cfg.Jwt.AccessTokenDuration = 12 * time.Hour
 	}
 
+	if cfg.Jwt.RememberMeAccessTokenSecretKey, err = time.ParseDuration(os.Getenv("JWT_REMEMBER_ME_ACCESS_TOKEN_DURATION")); err != nil {
+		cfg.Jwt.RememberMeAccessTokenSecretKey = time.Hour * 100
+	}
+
 	if cfg.RestAddr = os.Getenv("ADDR"); cfg.RestAddr == "" {
 		cfg.RestAddr = ":8080"
 	}
@@ -116,23 +127,31 @@ func (cfg *Config) Validate() error {
 	}
 
 	if cfg.Postgres.Database == "" {
-		return fmt.Errorf("d%w: atabase name is not set", ErrConfig)
+		return fmt.Errorf("%w: atabase name is not set", ErrConfig)
 	}
 
 	if cfg.RedisAddr == "" {
-		return fmt.Errorf("d%w: redis address is not set", ErrConfig)
+		return fmt.Errorf("%w: redis address is not set", ErrConfig)
 	}
 
 	if cfg.Jwt.AccessTokenSecretKey == "" {
-		return fmt.Errorf("d%w: jwt secret key is not set", ErrConfig)
+		return fmt.Errorf("%w: jwt secret key is not set", ErrConfig)
+	}
+
+	if cfg.Authorization.HeaderKey == "" {
+		return fmt.Errorf("%w: header key is not set", ErrConfig)
+	}
+
+	if cfg.Authorization.PayloadKey == "" {
+		return fmt.Errorf("%w: payload key is not set", ErrConfig)
 	}
 
 	if cfg.Smtp.Password == "" {
-		return fmt.Errorf("d%w: smtp sender password is not set", ErrConfig)
+		return fmt.Errorf("%w: smtp sender password is not set", ErrConfig)
 	}
 
 	if cfg.Smtp.Sender == "" {
-		return fmt.Errorf("d%w: smtp sender is not set", ErrConfig)
+		return fmt.Errorf("%w: smtp sender is not set", ErrConfig)
 	}
 
 	return nil
