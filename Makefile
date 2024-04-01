@@ -45,5 +45,5 @@ dev-backend-compose-up:
 image-build:
 	docker build --platform linux/amd64 --tag zohiddev/blog-project-task-backend:latest .
 
-push:
+push: image-build
 	docker image push zohiddev/blog-project-task-backend:latest
