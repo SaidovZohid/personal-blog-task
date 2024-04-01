@@ -3,10 +3,6 @@ all: help
 
 PROJECT_ROOT := $(shell pwd)
 
-# declare local env variables for development
-include .env
-export
-
 help: ## shows this help
 	@cat $(MAKEFILE_LIST) | grep -E '^[a-zA-Z_-]+:.*?## .*$$' | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
