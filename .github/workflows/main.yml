@@ -18,8 +18,7 @@ jobs:
         uses: docker/setup-buildx-action@v1
 
       - name: Build and Push Docker Image
-        run: |
-          docker login -u $REGISTRY_USER -p $REGISTRY_PASS && make push
+        run: make push
 
       - name: Install SSH Client
         run: sudo apt-get install -y openssh-client
